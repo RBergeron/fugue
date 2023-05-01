@@ -1,5 +1,21 @@
 # Release Notes
 
+## 0.8.4
+
+-   [455](https://github.com/fugue-project/fugue/issues/455) Make Fugue pandas 2 compatible
+
+## 0.8.3
+
+-   [449](https://github.com/fugue-project/fugue/issues/449) Add coarse partitioning concept
+-   [452](https://github.com/fugue-project/fugue/issues/452) Add as_fugue_engine_df
+
+## 0.8.2
+
+-   [430](https://github.com/fugue-project/fugue/issues/430) Support Polars DataFrames
+-   [434](https://github.com/fugue-project/fugue/issues/434) Make Transformations data format aware
+-   [408](https://github.com/fugue-project/fugue/issues/408) Remove SQLite support
+-   [444](https://github.com/fugue-project/fugue/issues/444) Clean up FunctionWrapper
+
 ## 0.8.1
 
 -   [423](https://github.com/fugue-project/fugue/issues/423) Add seaborn as a domain level extension for visualization

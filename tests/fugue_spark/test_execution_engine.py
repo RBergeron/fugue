@@ -18,6 +18,7 @@ from fugue.collections.partition import PartitionSpec
 from fugue.dataframe import (
     ArrayDataFrame,
     ArrowDataFrame,
+    IterablePandasDataFrame,
     LocalDataFrameIterableDataFrame,
     PandasDataFrame,
 )
@@ -25,6 +26,7 @@ from fugue.dataframe.utils import _df_eq as df_eq
 from fugue.extensions.transformer import Transformer, transformer
 from fugue.plugins import infer_execution_engine
 from fugue.workflow.workflow import FugueWorkflow
+from fugue_spark._utils.convert import to_pandas
 from fugue_spark.dataframe import SparkDataFrame
 from fugue_spark.execution_engine import SparkExecutionEngine
 from fugue_test.builtin_suite import BuiltInTests
@@ -85,6 +87,11 @@ class SparkExecutionEngineTests(ExecutionEngineTests.Tests):
         res = a.as_array(type_safe=True)
         assert res[0][0] == {"a": "b"}
 
+        pdf = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+        pdf = pdf[pdf.a < 1]
+        a = e.to_df(pdf)
+        assert fa.get_schema(a) == "a:long,b:long"
+
     def test_persist(self):
         e = self.engine
 
@@ -120,7 +127,6 @@ class SparkExecutionEngineTests(ExecutionEngineTests.Tests):
         assert isinstance(infer_execution_engine([fdf]), SparkSession)
 
 
-@pytest.mark.skipif(pyspark.__version__ < "3", reason="pyspark < 3")
 class SparkExecutionEnginePandasUDFTests(ExecutionEngineTests.Tests):
     @pytest.fixture(autouse=True)
     def init_session(self, spark_session):
@@ -166,7 +172,7 @@ class SparkExecutionEnginePandasUDFTests(ExecutionEngineTests.Tests):
                     pdf["zz"] = pdf["xx"] + pdf["yy"]
                     yield PandasDataFrame(pdf)
 
-            return LocalDataFrameIterableDataFrame(get_dfs())
+            return IterablePandasDataFrame(get_dfs())
 
         e = self.engine
         np.random.seed(0)
@@ -191,6 +197,7 @@ class SparkExecutionEngineBuiltInTests(BuiltInTests.Tests):
             session,
             {
                 "test": True,
+                "fugue.spark.use_pandas_udf": False,
                 "fugue.rpc.server": "fugue.rpc.flask.FlaskRPCServer",
                 "fugue.rpc.flask_server.host": "127.0.0.1",
                 "fugue.rpc.flask_server.port": "1234",
@@ -257,6 +264,37 @@ class SparkExecutionEngineBuiltInTests(BuiltInTests.Tests):
             dag.output(c, using=assert_match, params=dict(values=[100]))
         dag.run(self.engine)
 
+    def test_coarse_partition(self):
+        def verify_coarse_partition(df: pd.DataFrame) -> List[List[Any]]:
+            ct = df.a.nunique()
+            s = df.a * 1000 + df.b
+            ordered = ((s - s.shift(1)).dropna() >= 0).all(axis=None)
+            return [[ct, ordered]]
+
+        def assert_(df: pd.DataFrame, rc: int, n: int, check_ordered: bool) -> None:
+            if rc > 0:
+                assert len(df) == rc
+            assert df.ct.sum() == n
+            if check_ordered:
+                assert (df.ordered == True).all()
+
+        gps = 100
+        partition_num = 6
+        df = pd.DataFrame(dict(a=list(range(gps)) * 10, b=range(gps * 10))).sample(
+            frac=1.0
+        )
+        with FugueWorkflow() as dag:
+            a = dag.df(df)
+            c = a.partition(
+                algo="coarse", by="a", presort="b", num=partition_num
+            ).transform(verify_coarse_partition, schema="ct:int,ordered:bool")
+            dag.output(
+                c,
+                using=assert_,
+                params=dict(rc=partition_num, n=gps, check_ordered=True),
+            )
+        dag.run(self.engine)
+
     def test_session_as_engine(self):
         dag = FugueWorkflow()
         a = dag.df([[p, 0] for p in range(100)], "a:int,b:int")
@@ -274,7 +312,7 @@ class SparkExecutionEngineBuiltInTests(BuiltInTests.Tests):
 
         result = transform(sdf, f1, partition=dict(by=["a"]), engine=self.engine)
         assert isinstance(result, SDataFrame)
-        assert result.toPandas().sort_values(["a"]).values.tolist() == [[0, 0], [1, 1]]
+        assert to_pandas(result).sort_values(["a"]).values.tolist() == [[0, 0], [1, 1]]
 
     def test_annotation_1(self):
         def m_c(engine: SparkExecutionEngine) -> ps.DataFrame:
@@ -284,7 +322,7 @@ class SparkExecutionEngineBuiltInTests(BuiltInTests.Tests):
             return df
 
         def m_o(engine: SparkExecutionEngine, df: ps.DataFrame) -> None:
-            assert 1 == df.toPandas().shape[0]
+            assert 1 == to_pandas(df).shape[0]
 
         with FugueWorkflow() as dag:
             df = dag.create(m_c).process(m_p)
@@ -302,7 +340,7 @@ class SparkExecutionEngineBuiltInTests(BuiltInTests.Tests):
 
         def m_o(session: SparkSession, df: ps.DataFrame) -> None:
             assert isinstance(session, SparkSession)
-            assert 1 == df.toPandas().shape[0]
+            assert 1 == to_pandas(df).shape[0]
 
         with FugueWorkflow() as dag:
             df = dag.create(m_c).process(m_p)

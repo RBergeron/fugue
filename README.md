@@ -7,9 +7,9 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/4fa5f2f53e6f48aaa1218a89f4808b91)](https://www.codacy.com/gh/fugue-project/fugue/dashboard?utm_source=github.com&utm_medium=referral&utm_content=fugue-project/fugue&utm_campaign=Badge_Grade)
 [![Downloads](https://pepy.tech/badge/fugue)](https://pepy.tech/project/fugue)
 
-| Tutorials | API Documentation | Chat with us on slack! |
-| --- | --- | --- |
-| [![Jupyter Book Badge](https://jupyterbook.org/badge.svg)](https://fugue-tutorials.readthedocs.io/) | [![Doc](https://readthedocs.org/projects/fugue/badge)](https://fugue.readthedocs.org)  | [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](http://slack.fugue.ai) |
+| Tutorials                                                                                           | API Documentation                                                                     | Chat with us on slack!                                                                                                   |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [![Jupyter Book Badge](https://jupyterbook.org/badge.svg)](https://fugue-tutorials.readthedocs.io/) | [![Doc](https://readthedocs.org/projects/fugue/badge)](https://fugue.readthedocs.org) | [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](http://slack.fugue.ai) |
 
 
 **Fugue is a unified interface for distributed computing that lets users execute Python, Pandas, and SQL code on Spark, Dask, and Ray with minimal rewrites**.
@@ -148,6 +148,7 @@ It also has the following installation extras:
 *   **dask**: to support Dask as the ExecutionEngine.
 *   **ray**: to support Ray as the ExecutionEngine.
 *   **duckdb**: to support DuckDB as the ExecutionEngine, read [details](https://fugue-tutorials.readthedocs.io/tutorials/integrations/backends/duckdb.html).
+*   **polars**: to support Polars DataFrames and extensions using Polars.
 *   **ibis**: to enable Ibis for Fugue workflows, read [details](https://fugue-tutorials.readthedocs.io/tutorials/integrations/backends/ibis.html).
 *   **cpp_sql_parser**: to enable the CPP antlr parser for Fugue SQL. It can be 50+ times faster than the pure Python parser. For the main Python versions and platforms, there is already pre-built binaries, but for the remaining, it needs a C++ compiler to build on the fly.
 
@@ -201,6 +202,7 @@ By being an abstraction layer, Fugue can be used with a lot of other open-source
 Python backends:
 
 *   [Pandas](https://github.com/pandas-dev/pandas)
+*   [Polars](https://www.pola.rs) (DataFrames only)
 *   [Spark](https://github.com/apache/spark)
 *   [Dask](https://github.com/dask/dask)
 *   [Ray](http://github.com/ray-project/ray)
@@ -212,6 +214,7 @@ FugueSQL backends:
 *   [Duckdb](https://github.com/duckdb/duckdb) - in-process SQL OLAP database management
 *   [dask-sql](https://github.com/dask-contrib/dask-sql) - SQL interface for Dask
 *   SparkSQL
+*   BigQuery
 
 
 Fugue is available as a backend or can integrate with the following projects:
@@ -222,23 +225,36 @@ Fugue is available as a backend or can integrate with the following projects:
 *   [Prefect](https://fugue-tutorials.readthedocs.io/tutorials/integrations/ecosystem/prefect.html) - workflow orchestration
 *   [Pandera](https://fugue-tutorials.readthedocs.io/tutorials/integrations/ecosystem/pandera.html) - data validation
 
+Registered 3rd party extensions (majorly for Fugue SQL) include:
 
-## Further Resources
+*   [Pandas plot](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.plot.html) - visualize data using matplotlib or plotly
+*   [Seaborn](https://seaborn.pydata.org/api.html) - visualize data using seaborn
+*   [WhyLogs](https://whylogs.readthedocs.io/en/latest/examples/integrations/Fugue_Profiling.html?highlight=fugue) - visualize data profiling
+*   [Vizzu](https://github.com/vizzuhq/ipyvizzu) - visualize data using ipyvizzu
 
-View some of our latest conferences presentations and content. For a more complete list, check the [Content](https://fugue-tutorials.readthedocs.io/tutorials/resources/content.html) page in the tutorials.
+## Community and Contributing
+
+Feel free to message us on [Slack](http://slack.fugue.ai). We also have [contributing instructions](CONTRIBUTING.md).
 
 ### Case Studies
 
 *   [How LyftLearn Democratizes Distributed Compute through Kubernetes Spark and Fugue](https://eng.lyft.com/how-lyftlearn-democratizes-distributed-compute-through-kubernetes-spark-and-fugue-c0875b97c3d9)
 *   [Clobotics - Large Scale Image Processing with Spark through Fugue](https://medium.com/fugue-project/large-scale-image-processing-with-spark-through-fugue-e510b9813da8)
 
+### Mentioned Uses
+
+*   [Productionizing Data Science at Interos, Inc. (LinkedIn post by Anthony Holten)](https://www.linkedin.com/posts/anthony-holten_pandas-spark-dask-activity-7022628193983459328-QvcF)
+
+*   [Multiple Time Series Forecasting with Fugue & Nixtla at Bain & Company(LinkedIn post by Fahad Akbar)](https://www.linkedin.com/posts/fahadakbar_fugue-datascience-forecasting-activity-7041119034813124608-u08q?utm_source=share&utm_medium=member_desktop)
+
+## Further Resources
+
+View some of our latest conferences presentations and content. For a more complete list, check the [Content](https://fugue-tutorials.readthedocs.io/tutorials/resources/content.html) page in the tutorials.
+
 ### Blogs
 
 *   [Why Pandas-like Interfaces are Sub-optimal for Distributed Computing](https://towardsdatascience.com/why-pandas-like-interfaces-are-sub-optimal-for-distributed-computing-322dacbce43)
-*   [Interoperable Python and SQL in Jupyter Notebooks (Towards Data Science)](https://towardsdatascience.com/interoperable-python-and-sql-in-jupyter-notebooks-86245e711352)
-*   [Introducing Fugue - Reducing PySpark Developer Friction](https://towardsdatascience.com/introducing-fugue-reducing-pyspark-developer-friction-a702230455de)
 *   [Introducing FugueSQL — SQL for Pandas, Spark, and Dask DataFrames (Towards Data Science by Khuyen Tran)](https://towardsdatascience.com/introducing-fuguesql-sql-for-pandas-spark-and-dask-dataframes-63d461a16b27)
-*   [Using Pandera on Spark for Data Validation through Fugue (Towards Data Science)](https://towardsdatascience.com/using-pandera-on-spark-for-data-validation-through-fugue-72956f274793)
 
 ### Conferences
 
@@ -247,7 +263,3 @@ View some of our latest conferences presentations and content. For a more comple
 *   [Large Scale Data Validation with Spark and Dask (PyCon US)](https://www.youtube.com/watch?v=2AdvBgjO_3Q)
 *   [FugueSQL - The Enhanced SQL Interface for Pandas, Spark, and Dask DataFrames (PyData Global)](https://www.youtube.com/watch?v=OBpnGYjNBBI)
 *   [Distributed Hybrid Parameter Tuning](https://www.youtube.com/watch?v=_GBjqskD8Qk)
-
-## Community and Contributing
-
-Feel free to message us on [Slack](http://slack.fugue.ai). We also have [contributing instructions](CONTRIBUTING.md).

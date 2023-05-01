@@ -32,7 +32,6 @@ devenv:
 	pip3 install -r requirements.txt
 	pre-commit install
 	pre-commit install-hooks
-	bash scripts/add_avro_jar.sh
 	pip freeze
 
 devenvlegacy:
@@ -101,6 +100,9 @@ testduck:
 
 testibis:
 	python3 -b -m pytest tests/fugue_ibis
+
+testpolars:
+	python3 -b -m pytest tests/fugue_polars
 
 testnotebook:
 	pip install .

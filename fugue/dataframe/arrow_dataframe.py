@@ -49,7 +49,6 @@ class ArrowDataFrame(LocalBoundedDataFrame):
         self,
         df: Any = None,
         schema: Any = None,
-        pandas_df_wrapper: bool = False,
     ):
         if df is None:
             schema = _input_schema(schema).assert_not_empty()
@@ -142,7 +141,7 @@ class ArrowDataFrame(LocalBoundedDataFrame):
         return self.native.shape[0]
 
     def as_pandas(self) -> pd.DataFrame:
-        return self.native.to_pandas()
+        return self.native.to_pandas(use_threads=False, date_as_object=False)
 
     def head(
         self, n: int, columns: Optional[List[str]] = None

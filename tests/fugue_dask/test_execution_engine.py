@@ -40,7 +40,8 @@ class DaskExecutionEngineTests(ExecutionEngineTests.Tests):
 
     def make_engine(self):
         client = Client(processes=True, n_workers=3, threads_per_worker=1)
-        dask.config.set(shuffle="tasks")  # p2p (new default algo has bugs)
+        # p2p (new default algo has bugs)
+        dask.config.set({"dataframe.shuffle.method": "tasks"})
         e = DaskExecutionEngine(client, conf=dict(test=True, **_CONF))
         return e
 
@@ -150,6 +151,37 @@ class DaskExecutionEngineBuiltInTests(BuiltInTests.Tests):
             df = dag.create(m_c).process(m_p)
             df.assert_eq(dag.df([[0]], "a:long"))
             df.output(m_o)
+        dag.run(self.engine)
+
+    def test_coarse_partition(self):
+        def verify_coarse_partition(df: pd.DataFrame) -> List[List[Any]]:
+            ct = df.a.nunique()
+            s = df.a * 1000 + df.b
+            ordered = ((s - s.shift(1)).dropna() >= 0).all(axis=None)
+            return [[ct, ordered]]
+
+        def assert_(df: pd.DataFrame, rc: int, n: int, check_ordered: bool) -> None:
+            if rc > 0:
+                assert len(df) == rc
+            assert df.ct.sum() == n
+            if check_ordered:
+                assert (df.ordered == True).all()
+
+        gps = 100
+        partition_num = 6
+        df = pd.DataFrame(dict(a=list(range(gps)) * 10, b=range(gps * 10))).sample(
+            frac=1.0
+        )
+        with FugueWorkflow() as dag:
+            a = dag.df(df)
+            c = a.partition(
+                algo="coarse", by="a", presort="b", num=partition_num
+            ).transform(verify_coarse_partition, schema="ct:int,ordered:bool")
+            dag.output(
+                c,
+                using=assert_,
+                params=dict(rc=partition_num, n=gps, check_ordered=True),
+            )
         dag.run(self.engine)
 
 
